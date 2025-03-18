@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disk Space Visualization</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Disk Space Visualization</h1>
+        <div class="charts-container">
+            <div class="chart-wrapper">
+                <h2>Total Disk Space Usage</h2>
+                <canvas id="pieChart"></canvas>
+            </div>
+
+            <div class="chart-wrapper">
+                <h2>Disk Usage by Partition</h2>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+        <div class="info-container">
+            <h2>Disk Partitions</h2>
+            <div id="partitions-info"></div>
+
+            <div class="summary">
+                <h3>Summary</h3>
+                <p id="total-used"></p>
+                <p id="total-free"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
