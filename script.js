@@ -28,7 +28,6 @@ function fetchDiskData() {
                 const used = total - free;
                 diskData.push({
                   device: device,
-                  mountpoint: device + "\\",
                   total: total / 1024 ** 3, // bytes to GB
                   used: used / 1024 ** 3,
                   free: free / 1024 ** 3,
@@ -86,6 +85,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Create the bar chart for disk usage by partition
       createBarChart(diskData);
+
+      // New: render sortable table for disk partitions
+      renderPartitionTable(diskData);
     })
     .catch((err) => {
       console.error("Error fetching disk data:", err);
@@ -101,7 +103,6 @@ function displayPartitionInfo(partitionInfo) {
 
     card.innerHTML = `
             <h4>${partition.device}</h4>
-            <p>Mountpoint: ${partition.mountpoint}</p>
             <p>Total: ${partition.total.toFixed(2)} GB</p>
             <p>Used: ${partition.used.toFixed(2)} GB</p>
             <p>Free: ${partition.free.toFixed(2)} GB</p>
@@ -126,13 +127,6 @@ function calculateAndDisplayTotals(partitionInfo) {
     (sum, partition) => sum + partition.free,
     0
   );
-
-  document.getElementById(
-    "total-used"
-  ).textContent = `Total Used Space: ${totalUsed.toFixed(2)} GB`;
-  document.getElementById(
-    "total-free"
-  ).textContent = `Total Free Space: ${totalFree.toFixed(2)} GB`;
 
   return { totalUsed, totalFree };
 }
@@ -228,5 +222,62 @@ function createBarChart(partitionInfo) {
         },
       },
     },
+  });
+}
+
+// New function to render a sortable table of partitions
+function renderPartitionTable(partitions) {
+  const tableContainer = document.getElementById("partitions-table");
+  let tableHTML = `<table id="partitions-data-table">
+    <thead>
+      <tr>
+        <th data-key="device">Device</th>
+        <th data-key="total">Total (GB)</th>
+        <th data-key="used">Used (GB)</th>
+        <th data-key="free">Free (GB)</th>
+        <th data-key="percent">Usage (%)</th>
+      </tr>
+    </thead>
+    <tbody>`;
+  partitions.forEach((p) => {
+    tableHTML += `<tr>
+      <td>${p.device}</td>
+      <td>${p.total.toFixed(2)}</td>
+      <td>${p.used.toFixed(2)}</td>
+      <td>${p.free.toFixed(2)}</td>
+      <td>${p.percent}</td>
+    </tr>`;
+  });
+  tableHTML += `</tbody></table>`;
+  tableContainer.innerHTML = tableHTML;
+
+  // Add sorting functionality on header click
+  const headers = tableContainer.querySelectorAll("th");
+  headers.forEach((header) => {
+    header.addEventListener("click", function () {
+      const key = header.getAttribute("data-key");
+      const tbody = tableContainer.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      // Determine sort order (toggle between true/false)
+      let asc = header.getAttribute("data-asc") === "true";
+      asc = !asc;
+      header.setAttribute("data-asc", asc);
+
+      // Get the column index of the clicked header
+      const colIndex = Array.from(header.parentNode.children).indexOf(header);
+      rows.sort((a, b) => {
+        let aVal = a.children[colIndex].textContent;
+        let bVal = b.children[colIndex].textContent;
+        // Compare numerically if applicable
+        if (["total", "used", "free", "percent"].includes(key)) {
+          aVal = parseFloat(aVal);
+          bVal = parseFloat(bVal);
+        }
+        if (aVal < bVal) return asc ? -1 : 1;
+        if (aVal > bVal) return asc ? 1 : -1;
+        return 0;
+      });
+      rows.forEach((row) => tbody.appendChild(row));
+    });
   });
 }
